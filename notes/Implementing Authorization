@@ -1,0 +1,26 @@
+FIRST STEP
+=========
+
+A request is sent to profile update
+ This is what the url will look like
+    http://localhost:8080/profile/userid8437922903874
+    
+When there is userid in the incoming request(url)
+    based on that user id
+        our backend will make a query to the database and load that user information (name, email, etc)
+            then we will add that information to the request object
+                like so: req.profile = userInformation
+
+
+SECOND STEP 
+===========
+add a property called auth in requireSignin()
+    so that we know the user is authenticated
+
+
+THIRD STEP
+==========
+
+create hasAuthorization()
+    to make sure request object hasq.auth._id
+        req.profile && req.auth  && req.profile._id === re
