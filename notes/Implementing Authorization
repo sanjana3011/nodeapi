@@ -23,4 +23,4 @@ THIRD STEP
 
 create hasAuthorization()
     to make sure request object hasq.auth._id
-        req.profile && req.auth  && req.profile._id === re
+        req.profile && req.auth  && req.profile._id === req.auth._id
