@@ -31,10 +31,8 @@ exports.signin = (req, res) => {
                 error: "Email and password do not match"
             });
         }
-
         // generate a token with user id and secret
         const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
-
         // persist the token as 't' in cookie with expiry date
         res.cookie("t", token, { expire: new Date() + 9999 });
         // return response with user and token to frontend client
@@ -52,5 +50,5 @@ exports.requireSignin = expressJwt({
     // if the token is valid, express jwt appends the verified users id
     // in an auth key to the request object
     secret: process.env.JWT_SECRET,
-    userProperty : "auth"
+    userProperty: "auth"
 });
