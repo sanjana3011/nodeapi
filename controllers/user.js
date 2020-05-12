@@ -1,5 +1,6 @@
 const _ = require("lodash");
 const User = require("../models/user");
+const Post =require("../models/post")
 const formidable = require("formidable");
 const fs = require("fs");
 
@@ -110,6 +111,14 @@ exports.deleteUser = (req, res, next) => {
                 error: err
             });
         }
-        res.json({ message: "User deleted successfully" });
     });
+    Post.find({postedBy:user._id})
+        .remove((err)=>{
+        if (err) {
+        return res.status(400).json({
+            error: err
+            });
+        }
+        res.json({ message: "User and its Posts deleted successfully" });
+    })
 };
