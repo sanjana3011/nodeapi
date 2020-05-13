@@ -119,6 +119,6 @@ exports.deleteUser = (req, res, next) => {
             error: err
             });
         }
-        res.json({ message: "User and its Posts deleted successfully" });
+        res.json({ message: "User and its posts have been deleted successfully" });
     })
 };
