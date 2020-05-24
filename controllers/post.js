@@ -2,7 +2,7 @@ const Post = require("../models/post");
 const formidable = require("formidable");
 const fs = require("fs");
 const _ = require("lodash");
-var cloudinary = require('cloudinary').v2
+const cloudinary = require('cloudinary').v2
 exports.postById = (req, res, next, id) => {
     Post.findById(id)
         .populate("postedBy", "_id name")
@@ -174,13 +174,3 @@ exports.photo = (req, res, next) => {
 exports.singlePost = (req, res) => {
     return res.json(req.post);
 };
-
-// var cloudinary = require('cloudinary');
-
-// cloudinary.config({
-//   cloud_name: 'name',
-//   api_key: 'key',
-//   api_secret: 'secret'
-// });
-
-// module.exports.cloudinary = cloudinary;
