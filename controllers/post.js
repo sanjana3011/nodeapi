@@ -2,7 +2,7 @@ const Post = require("../models/post");
 const formidable = require("formidable");
 const fs = require("fs");
 const _ = require("lodash");
-
+var cloudinary = require('cloudinary').v2
 exports.postById = (req, res, next, id) => {
     Post.findById(id)
         .populate("postedBy", "_id name")
@@ -31,22 +31,39 @@ exports.getPosts = (req, res) => {
 exports.createPost = (req, res, next) => {
     let form = new formidable.IncomingForm();
     form.keepExtensions = true;
-    form.parse(req, (err, fields, files) => {
+    form.multiples = true;
+    form.parse(req, async(err, fields, files) => {
         if (err) {
             return res.status(400).json({
                 error: "Image could not be uploaded"
             });
         }
         let post = new Post(fields);
-
+        let postPhotos=[];
+        for(let i=0;i<files.photos.length;i++){
+                let fileName=files.photos[i].name
+                fileName=fileName.split('.').slice(0, -1).join('.');
+                await cloudinary.uploader.upload(
+                    files.photos[i].path ,
+                    {
+                        resource_type: "image",
+                        public_id: `kokostore_uploads/post_images/${fileName}`
+                    } , 
+                    (err, result)=> {
+                        if(err){
+                            return res.status(400).json({
+                                error: "Post could not be created. Please refresh and try again."
+                            })}
+                        else
+                            postPhotos.push(result.secure_url)
+                    }
+                );
+            }
         req.profile.hashed_password = undefined;
         req.profile.salt = undefined;
         post.postedBy = req.profile;
+        post.photos=postPhotos;
 
-        if (files.photo) {
-            post.photo.data = fs.readFileSync(files.photo.path);
-            post.photo.contentType = files.photo.type;
-        }
         post.save((err, result) => {
             if (err) {
                 return res.status(400).json({
@@ -157,3 +174,13 @@ exports.photo = (req, res, next) => {
 exports.singlePost = (req, res) => {
     return res.json(req.post);
 };
+
+// var cloudinary = require('cloudinary');
+
+// cloudinary.config({
+//   cloud_name: 'name',
+//   api_key: 'key',
+//   api_secret: 'secret'
+// });
+
+// module.exports.cloudinary = cloudinary;

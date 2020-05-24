@@ -9,10 +9,9 @@ const postSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    photo: {
-        data: Buffer,  // research more
-        contentType: String
-    },
+    photos: [{
+        type: String    //store links to the post images
+    }],
     postedBy: {
         type: ObjectId,
         ref: "User"
