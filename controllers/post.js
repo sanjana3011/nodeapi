@@ -18,11 +18,15 @@ exports.postById = (req, res, next, id) => {
 };
 
 exports.getPosts = (req, res) => {
-    const posts = Post.find()
+    Post.find({})
         .populate("postedBy", "_id name")
-        .select("_id title body created")
-        .sort({ created: -1 })
-        .then(posts => {
+        .sort("_created")
+        .exec((err, posts) => {
+            if (err) {
+                return res.status(400).json({
+                    error: err
+                });
+            }
             res.json(posts);
         })
         .catch(err => console.log(err));
@@ -40,6 +44,9 @@ exports.createPost = (req, res, next) => {
         }
         let post = new Post(fields);
         let postPhotos=[];
+        if(!files.photos.length){
+            files.photos=[files.photos]
+        }
         for(let i=0;i<files.photos.length;i++){
                 let fileName=files.photos[i].name
                 fileName=fileName.split('.').slice(0, -1).join('.');
@@ -154,6 +161,8 @@ exports.updatePost = (req, res, next) => {
 
 exports.deletePost = (req, res) => {
     let post = req.post;
+    // for(let img in post.photos)
+    //     cloudinary.uploader.destroy(photos[img], (result) =>{ console.log(result) }); 
     post.remove((err, post) => {
         if (err) {
             return res.status(400).json({
