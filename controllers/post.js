@@ -20,7 +20,7 @@ exports.postById = (req, res, next, id) => {
 exports.getPosts = (req, res) => {
     Post.find({})
         .populate("postedBy", "_id name")
-        .sort("_created")
+        .sort({created:'-1'})
         .exec((err, posts) => {
             if (err) {
                 return res.status(400).json({
@@ -43,18 +43,21 @@ exports.createPost = (req, res, next) => {
             });
         }
         let post = new Post(fields);
+
+        //upload images
         let postPhotos=[];
-        if(!files.photos.length){
-            files.photos=[files.photos]
-        }
-        for(let i=0;i<files.photos.length;i++){
-                let fileName=files.photos[i].name
-                fileName=fileName.split('.').slice(0, -1).join('.');
+        if (files.photos) {
+            if(!files.photos.length){
+                files.photos=[files.photos]             //for single img files, make single element array first
+            }
+            for(let i=0;i<files.photos.length;i++){
                 await cloudinary.uploader.upload(
                     files.photos[i].path ,
                     {
                         resource_type: "image",
-                        public_id: `kokostore_uploads/post_images/${fileName}`
+                        folder: `kokostore_uploads/post_images/`,
+                        use_filename: true, 
+                        unique_filename: true
                     } , 
                     (err, result)=> {
                         if(err){
@@ -62,15 +65,18 @@ exports.createPost = (req, res, next) => {
                                 error: "Post could not be created. Please refresh and try again."
                             })}
                         else
-                            postPhotos.push(result.secure_url)
+                            {postPhotos.push({link:result.secure_url, public_id:result.public_id})}
                     }
                 );
             }
+        }
+        //assign post details
         req.profile.hashed_password = undefined;
         req.profile.salt = undefined;
         post.postedBy = req.profile;
         post.photos=postPhotos;
 
+        //save post
         post.save((err, result) => {
             if (err) {
                 return res.status(400).json({
@@ -79,19 +85,14 @@ exports.createPost = (req, res, next) => {
             }
             res.json(result);
         });
-    });
-    //const post = new Post(req.body);
-    //post.save().then(result => {
-    //    res.json({
-    //        post: result
-    //    });
-    //});
+        }
+    );
 };
 
 exports.postsByUser = (req, res) => {
     Post.find({ postedBy: req.profile._id })
         .populate("postedBy", "_id name")
-        .sort("_created")
+        .sort({created:'-1'})
         .exec((err, posts) => {
             if (err) {
                 return res.status(400).json({
@@ -117,22 +118,47 @@ exports.isPoster = (req, res, next) => {
 exports.updatePost = (req, res, next) => {
     let form = new formidable.IncomingForm();
     form.keepExtensions = true;
-    form.parse(req, (err, fields, files) => {
+    form.multiples = true;
+    form.parse(req, async(err, fields, files) => {
         if (err) {
             return res.status(400).json({
-                error: "Photo could not be uploaded"
+                error: "Photos could not be uploaded"
             });
         }
-        // save post
+
+        //upload images
         let post = req.post;
         post = _.extend(post, fields);
-        post.updated = Date.now();
+        let postPhotos=[];
+        if (files.photos) {
+            if(!files.photos.length){
+                files.photos=[files.photos]         //for single img files, make single element array first
+            }
+            for(let i=0;i<files.photos.length;i++){
+                await cloudinary.uploader.upload(
+                    files.photos[i].path ,
+                    {
+                        resource_type: "image",
+                        folder: `kokostore_uploads/post_images/`,
+                        use_filename: true, 
+                        unique_filename: true
+                    } , 
+                    (err, result)=> {
+                        if(err){
+                            return res.status(400).json({
+                                error: "Post could not be updated. Please refresh and try again."
+                            })}
+                        else
+                            postPhotos.push({link:result.secure_url, public_id:result.public_id})
+                    }
+                )
+                .catch(err=>{console.log(err)}) ;
+                }
+            }   
+            post.photos=postPhotos;
+            post.updated = Date.now();
 
-        if (files.photo) {
-            post.photo.data = fs.readFileSync(files.photo.path);
-            post.photo.contentType = files.photo.type;
-        }
-
+        // save post
         post.save((err, result) => {
             if (err) {
                 return res.status(400).json({
@@ -161,8 +187,9 @@ exports.updatePost = (req, res, next) => {
 
 exports.deletePost = (req, res) => {
     let post = req.post;
-    // for(let img in post.photos)
-    //     cloudinary.uploader.destroy(photos[img], (result) =>{ console.log(result) }); 
+    for(let img in post.photos)
+        cloudinary.uploader.destroy(post.photos[img].public_id, (result) =>{ console.log('Images deleted') });
+        
     post.remove((err, post) => {
         if (err) {
             return res.status(400).json({

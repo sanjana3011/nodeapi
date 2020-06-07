@@ -10,7 +10,8 @@ const postSchema = new mongoose.Schema({
         required: true
     },
     photos: [{
-        type: String    //store links to the post images
+        link: String,    //store links to the post images
+        public_id:String
     }],
     postedBy: {
         type: ObjectId,
