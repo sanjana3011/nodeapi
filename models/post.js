@@ -3,16 +3,26 @@ const { ObjectId } = mongoose.Schema;
 const postSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: true
+        trim: true,
+        required: true,
+        maxlength: 100
     },
     body: {
         type: String,
-        required: true
+        required: true,
+        maxlength: 2000
     },
     photos: [{
         link: String,    //store links to the post images
         public_id:String
     }],
+    price: {
+        type: Number,
+        trim: true,
+        required: true,
+        maxlength: 32
+    },
+
     postedBy: {
         type: ObjectId,
         ref: "User"
