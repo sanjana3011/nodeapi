@@ -18,9 +18,6 @@ exports.userById = (req, res, next, id) => {
 };
 
 exports.hasAuthorization = (req, res, next) => {
-    console.log("nside auth");
-    console.log(req.auth._id);
-    console.log(req.profile._id);
     const authorized =
         req.profile && req.auth && req.profile._id == req.auth._id;
     if (!authorized) {
