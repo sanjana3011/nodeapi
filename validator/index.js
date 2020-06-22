@@ -11,6 +11,7 @@ exports.createPostValidator = (req, res, next) => {
         min: 4,
         max: 2000
     });
+    req.check("price", "Mention a price").notEmpty();
     // check for errors
     const errors = req.validationErrors();
     // if error show the first one as they happen

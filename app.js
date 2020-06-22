@@ -27,6 +27,9 @@ mongoose.connection.on("error", err => {
 const postRoutes = require("./routes/post");
 const authRoutes = require("./routes/auth");
 const userRoutes = require("./routes/user");
+const orderRoutes = require("./routes/order");
+const razorRoutes = require("./routes/razorpay");
+
 // apiDocs
 app.get("/api", (req, res) => {
     fs.readFile("docs/apiDocs.json", (err, data) => {
@@ -49,6 +52,9 @@ app.use(cors());
 app.use("/api", postRoutes);
 app.use("/api", authRoutes);
 app.use("/api", userRoutes);
+app.use("/api", orderRoutes);
+app.use("/api", razorRoutes);
+
 app.use(function(err, req, res, next) {
     if (err.name === "UnauthorizedError") {
         res.status(401).json({ error: "Unauthorized!" });
