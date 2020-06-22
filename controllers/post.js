@@ -154,8 +154,25 @@ exports.updatePost = (req, res, next) => {
                 )
                 .catch(err=>{console.log(err)}) ;
                 }
-            }   
-            post.photos=postPhotos;
+            }
+            const delImgs = JSON.parse("[" + post.removeImgs + "]"); //parse the array of image indices to be deleted 
+            let existingPics=post.photos
+
+            //delete images from cloudinary
+            for(let index of delImgs){
+                await cloudinary.uploader.destroy(existingPics[index].public_id, (result) =>{ console.log('Images deleted') })
+                                         .catch(err=>console.log(err))
+                existingPics[index]=null
+            }
+
+            //update 'post.photos' to keep only the non deleted and newly added images
+            let keepPics=[]
+            for(let pic of existingPics){
+                if(pic)
+                    keepPics.push(pic)
+            }
+            post.photos=[...keepPics,...postPhotos];
+
             post.updated = Date.now();
 
         // save post
@@ -185,10 +202,11 @@ exports.updatePost = (req, res, next) => {
 //     });
 // };
 
-exports.deletePost = (req, res) => {
+exports.deletePost = async(req, res) => {
     let post = req.post;
     for(let img in post.photos)
-        cloudinary.uploader.destroy(post.photos[img].public_id, (result) =>{ console.log('Images deleted') });
+        await cloudinary.uploader.destroy(post.photos[img].public_id, (result) =>{ console.log('Images deleted') })
+                                 .catch(err=>console.log(err))
         
     post.remove((err, post) => {
         if (err) {
