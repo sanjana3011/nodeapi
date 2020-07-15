@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    history: {
+        type: Array,
+        default: []
+    }
 });
 
 /**

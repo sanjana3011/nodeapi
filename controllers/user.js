@@ -45,22 +45,6 @@ exports.getUser = (req, res) => {
     return res.json(req.profile);
 };
 
-// exports.updateUser = (req, res, next) => {
-//     let user = req.profile;
-//     user = _.extend(user, req.body); // extend - mutate the source object
-//     user.updated = Date.now();
-//     user.save(err => {
-//         if (err) {
-//             return res.status(400).json({
-//                 error: "You are not authorized to perform this action"
-//             });
-//         }
-//         user.hashed_password = undefined;
-//         user.salt = undefined;
-//         res.json({ user });
-//     });
-// };
-
 exports.updateUser = (req, res, next) => {
     let form = new formidable.IncomingForm();
     form.keepExtensions = true;
@@ -119,4 +103,28 @@ exports.deleteUser = (req, res, next) => {
         }
         res.json({ message: "User and its posts have been deleted successfully" });
     })
+};
+
+exports.addOrderToUserHistory = (req, res, next) => {
+    let history = [];
+
+    req.body.order.products.forEach(item => {
+        history.push({
+            _id: item._id,
+            name: item.name,
+            description: item.body,
+            quantity: item.count,
+            transaction_id: req.body.order.transaction_id,
+            amount: req.body.order.amount
+        });
+    });
+
+    User.findOneAndUpdate({ _id: req.profile._id }, { $push: { history: history } }, { new: true }, (error, data) => {
+        if (error) {
+            return res.status(400).json({
+                error: 'Could not update user purchase history'
+            });
+        }
+        next();
+    });
 };
